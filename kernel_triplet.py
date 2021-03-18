@@ -3,6 +3,7 @@
 
 from __future__ import division
 import numpy as np
+import scipy
 from sklearn.base import BaseEstimator
 import pickle
 import os
@@ -23,7 +24,7 @@ def symmetrize(W):
 #WARNING: Grabage result if above happens 
 def pos_semidefinite(W):
     """ Make matrix positive semi-definite. """
-    w, v = np.linalg.eig(symmetrize(W))  # eigvec in columns, real eigenvalues
+    w, v = scipy.linalg.eigh(symmetrize(W))  # hopefully eigenvalues are real this time and the bug is fixed.
     D = np.diagflat(np.maximum(w, 0))
     W[:] = np.dot(np.dot(v, D), v.T)
     return W
