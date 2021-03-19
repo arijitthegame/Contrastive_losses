@@ -30,14 +30,14 @@ def pos_semidefinite(W):
     return W
 
 
-
+#TODO there is still a bug in the positive definite part of the code. 
 
 class KernelTriplet(BaseEstimator):
     """ OASIS algorithm. """
 
     def __init__(self, aggress=0.1, symmetrize=False,
                  make_pos_sd=False, n_iter=10 ** 4, sym_every=1,
-                 psd_every=1, random_seed=42, save_every= None, save_path=None):
+                 psd_every=1, margin =1.0, random_seed=42, save_every= None, save_path=None):
 # If you want to visualize the kernel, set make_pos_sd = True
         
         self.aggress = aggress
@@ -46,6 +46,7 @@ class KernelTriplet(BaseEstimator):
         self.make_pos_sd = make_pos_sd
         self.sym_every = sym_every
         self.psd_every = psd_every
+        self.margin = margin
         self.random_seed = random_seed #For reproducibility
         self.save_every = save_every
         self.save_path = save_path
@@ -82,11 +83,12 @@ class KernelTriplet(BaseEstimator):
         state = pickle.load(f)
         self._setstate(state)
 
-    def fit_batch(self, W, X, y, class_start, class_sizes, n_iter, margin=1.0):
+    def fit_batch(self, W, X, y, class_start, class_sizes, n_iter, margin):
         """ Train batch inner loop. """
 
         loss_steps_batch = np.empty((n_iter,), dtype='bool')
         n_samples, n_features = X.shape
+        self.margin = margin
 
         assert(W.shape[0] == n_features)
         assert(W.shape[1] == n_features)
@@ -182,7 +184,7 @@ class KernelTriplet(BaseEstimator):
                                                   class_start,
                                                   class_sizes,
                                                   steps_vec[b],
-                                                  1.0)
+                                                  self.margin)
             
             loss_steps[b * self.save_every:min(
                 (b + 1) * self.save_every, self.n_iter)] = loss_steps_batch
